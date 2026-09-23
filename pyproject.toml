@@ -1,0 +1,25 @@
+# Tool settings only. The app is not a package on PyPI: requirements.txt pins what the
+# image installs, and requirements-dev.txt adds what the tests need.
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is how pytest checks things.
+"tests/*" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The app is imported from the checkout rather than installed.
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["kafka_tester"]
+
+[tool.coverage.report]
+exclude_also = ['if __name__ == "__main__":']

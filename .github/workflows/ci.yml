@@ -1,0 +1,64 @@
+# Lint, and the test suite against a real broker. Brimyr's quality gate runs the
+# same suite without one, where the broker tests skip, so this is the only place
+# the tester is proven against Kafka rather than against stand-ins.
+#
+# Its own file, not a step in release.yml, security.yml or quality.yml: those are
+# rewritten from org-wide templates by Caldrith provisioning.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'LICENSE', '.gitignore']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      KAFKA_TESTER_IT_BOOTSTRAP: localhost:9092  # DevSkim: ignore DS162092
+    services:
+      kafka:
+        # The stock image is a single KRaft node that advertises port 9092 on the
+        # loopback address, which is exactly what a job on the runner host needs.
+        image: apache/kafka:4.3.1@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837
+        ports:
+          - 9092:9092
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      # The service container reports started before Kafka accepts connections.
+      - name: Wait for the broker
+        run: |
+          for _ in $(seq 30); do
+            if python -m kafka_tester check --bootstrap "$KAFKA_TESTER_IT_BOOTSTRAP" \
+                --timeout-ms 2000 >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          python -m kafka_tester check --bootstrap "$KAFKA_TESTER_IT_BOOTSTRAP"
+
+      - name: Test
+        run: pytest -W error::DeprecationWarning
