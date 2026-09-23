@@ -1,0 +1,4 @@
+*
+!kafka_tester/
+!requirements.txt
+**/__pycache__

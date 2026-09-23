@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kafka Tester</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<main>
+  <h1>Kafka Tester</h1>
+
+  <section class="info">
+    <ul>
+      <li><strong>Check</strong> connects and lists the brokers as they advertise themselves. It writes nothing.</li>
+      <li><strong>Produce</strong> writes one JSON message, creating the topic first if it is missing.</li>
+      <li><strong>Consume</strong> reads the newest {{ consume_limit }} messages without joining a consumer group.</li>
+    </ul>
+    <p>If Check works but Produce or Consume time out, this server can reach the bootstrap address but not the addresses the brokers advertise.</p>
+  </section>
+
+  <noscript><p class="result error">This page needs JavaScript to run a test.</p></noscript>
+
+  <form id="test-form" class="test-form"
+        data-endpoint="{{ url_for('run_test') }}"
+        data-custom="{{ custom }}"
+        data-timeout-ms="{{ settings.timeout_ms }}">
+    <label for="target">Target</label>
+    <select id="target" name="target">
+      {% for target in settings.targets %}
+      <option value="{{ target.name }}" data-tls="{{ 'true' if target.tls else 'false' }}" data-verify="{{ 'true' if target.verify else 'false' }}" title="{{ target.description }}">
+        {{ target.name }} ({{ target.bootstrap }}{{ ', TLS' if target.tls }})
+      </option>
+      {% endfor %}
+      {% if settings.allow_custom %}
+      <option value="{{ custom }}">Custom endpoint</option>
+      {% endif %}
+    </select>
+    {% if not settings.targets and not settings.allow_custom %}
+    <p class="result error">No targets are configured, and custom endpoints are turned off.</p>
+    {% endif %}
+
+    <div id="custom-fields">
+      <label for="bootstrap">Bootstrap servers</label>
+      <input id="bootstrap" name="bootstrap" placeholder="broker-1:9092,broker-2:9092" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="tls" name="tls">
+      <label for="tls">Use TLS</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="verify" name="verify" checked>
+      <label for="verify">Verify the certificate</label>
+    </div>
+
+    <label for="action">Action</label>
+    <select id="action" name="action">
+      <option value="check">Check the connection (writes nothing)</option>
+      <option value="produce">Produce a message</option>
+      <option value="consume">Consume the newest messages</option>
+    </select>
+
+    <div id="topic-field">
+      <label for="topic">Topic</label>
+      <input id="topic" name="topic" value="{{ settings.default_topic }}" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="message-field">
+      <label for="message">Message</label>
+      <input id="message" name="message" value="Test message from kafka-tester" maxlength="10000">
+    </div>
+
+    <button type="submit" id="run">Run test</button>
+  </form>
+
+  <div id="result" aria-live="polite"></div>
+
+  <p class="footer"><a href="{{ url_for('debug_ip') }}">This server's outbound IP, and what the preset targets resolve to</a></p>
+</main>
+</body>
+</html>
