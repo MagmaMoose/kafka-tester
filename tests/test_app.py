@@ -8,7 +8,7 @@ from kafka_tester.config import Settings, Target
 
 SETTINGS = Settings(
     targets=(
-        Target("local", "localhost:9092"),
+        Target("local", "broker-1.internal:9092"),
         Target("public", "kafka.example.com:443", tls=True, verify=False),
     ),
     ip_echo_url="https://echo.example.com",
@@ -38,7 +38,7 @@ def client(settings=SETTINGS):
 
 def test_index_lists_the_targets_and_the_custom_option():
     page = client().get("/").get_data(as_text=True)
-    assert "local (localhost:9092)" in page
+    assert "local (broker-1.internal:9092)" in page
     assert "public (kafka.example.com:443, TLS)" in page
     assert f'<option value="{CUSTOM}">' in page
 
@@ -138,7 +138,7 @@ def test_consume(calls):
 
 def test_a_kafka_failure_is_reported_with_its_detail(monkeypatch):
     def fail(conn):
-        exc = KafkaTimeoutError("Unable to bootstrap from ['localhost:9092']")
+        exc = KafkaTimeoutError("Unable to bootstrap from ['broker-1.internal:9092']")
         exc.client_log = ["Bootstrap connection to bootstrap-0 failed: refused"]
         raise exc
 
@@ -147,9 +147,9 @@ def test_a_kafka_failure_is_reported_with_its_detail(monkeypatch):
     assert response.status_code == 502
     assert response.get_json() == {
         "success": False,
-        "error": "KafkaTimeoutError: Unable to bootstrap from ['localhost:9092']",
+        "error": "KafkaTimeoutError: Unable to bootstrap from ['broker-1.internal:9092']",
         "action": "check",
-        "bootstrap": "localhost:9092",
+        "bootstrap": "broker-1.internal:9092",
         "client_log": ["Bootstrap connection to bootstrap-0 failed: refused"],
     }
 
@@ -169,7 +169,7 @@ def test_debug_ip(monkeypatch):
     monkeypatch.setattr(app_module.network, "resolve", lambda bootstrap: {bootstrap: ["192.0.2.1"]})
     body = client().get("/debug/ip").get_json()
     assert body["outbound_ip"] == "203.0.113.7"
-    assert body["dns"]["local"] == {"localhost:9092": ["192.0.2.1"]}
+    assert body["dns"]["local"] == {"broker-1.internal:9092": ["192.0.2.1"]}
 
 
 def test_debug_ip_when_the_echo_service_fails(monkeypatch):

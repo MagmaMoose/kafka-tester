@@ -31,7 +31,7 @@ def topic():
 
 @pytest.mark.parametrize("action", ["check", "produce", "consume"])
 def test_an_unreachable_endpoint_fails_within_the_timeout(action):
-    conn = Connection("127.0.0.1:1", timeout_ms=1000)
+    conn = Connection("127.0.0.1:1", timeout_ms=1000)  # DevSkim: ignore DS162092
     run = {
         "check": lambda: kafka_ops.check(conn),
         "produce": lambda: kafka_ops.produce(conn, "t", "x"),

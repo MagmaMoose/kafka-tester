@@ -95,9 +95,8 @@ def _unverified_tls_context() -> ssl.SSLContext:
     Only used when the operator turns verification off, so a test can tell "the
     broker is down" apart from "the broker's certificate is not one we trust".
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
-    context.check_hostname = False
+    context = ssl.create_default_context()
+    context.check_hostname = False  # DevSkim: ignore DS130822
     context.verify_mode = ssl.CERT_NONE
     return context
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import http.client
 import socket
+import ssl
 from urllib.parse import urlsplit
 
 
@@ -20,7 +21,12 @@ def outbound_ip(url: str, timeout: float = 5.0) -> str:
     path = parts.path or "/"
     if parts.query:
         path = f"{path}?{parts.query}"
-    connection = http.client.HTTPSConnection(parts.hostname, parts.port, timeout=timeout)
+    # Certificate and hostname checks come from the default context, stated here
+    # rather than left to whatever the running Python version defaults to.
+    context = ssl.create_default_context()
+    connection = http.client.HTTPSConnection(  # nosemgrep
+        parts.hostname, parts.port, timeout=timeout, context=context
+    )
     try:
         connection.request("GET", path)
         response = connection.getresponse()

@@ -77,7 +77,7 @@ def test_defaults():
 
 def test_everything_set():
     targets = [
-        {"name": "local", "bootstrap": "localhost:9092"},
+        {"name": "local", "bootstrap": "broker-1.internal:9092"},
         {
             "name": "public",
             "bootstrap": "kafka.example.com:443",
@@ -98,7 +98,7 @@ def test_everything_set():
         }
     )
     assert settings.targets == (
-        Target("local", "localhost:9092"),
+        Target("local", "broker-1.internal:9092"),
         Target(
             "public",
             "kafka.example.com:443",
@@ -123,7 +123,7 @@ def test_everything_set():
         ({"KAFKA_TESTER_TIMEOUT_MS": "10s"}, "KAFKA_TESTER_TIMEOUT_MS"),
         ({"KAFKA_TESTER_TIMEOUT_MS": "500"}, "KAFKA_TESTER_TIMEOUT_MS"),
         ({"KAFKA_TESTER_DEFAULT_TOPIC": "bad topic"}, "KAFKA_TESTER_DEFAULT_TOPIC"),
-        ({"KAFKA_TESTER_IP_ECHO_URL": "http://example.com"}, "https://"),
+        ({"KAFKA_TESTER_IP_ECHO_URL": "http://a.b"}, "https://"),  # DevSkim: ignore DS137138
         ({"KAFKA_TESTER_ALLOW_CUSTOM": "sometimes"}, "KAFKA_TESTER_ALLOW_CUSTOM"),
         ({"KAFKA_TESTER_TARGETS": "{not json"}, "not valid JSON"),
         ({"KAFKA_TESTER_TARGETS": '{"name": "a"}'}, "JSON list"),

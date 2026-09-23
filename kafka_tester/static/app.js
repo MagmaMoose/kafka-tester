@@ -61,7 +61,7 @@
     // creating the topic, and on the send itself.
     const waitMs = Number(form.dataset.timeoutMs) * 3 + 5000;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), waitMs);
+    const timer = setTimeout(() => controller.abort(), waitMs); // DevSkim: ignore DS172411
     button.disabled = true;
     show("pending", "Testing...");
     try {

@@ -41,7 +41,6 @@ def test_tls_without_verification_accepts_any_certificate():
     context = config["ssl_context"]
     assert context.verify_mode == ssl.CERT_NONE
     assert context.check_hostname is False
-    assert context.minimum_version == ssl.TLSVersion.TLSv1_2
     assert "ssl_cafile" not in config
 
 

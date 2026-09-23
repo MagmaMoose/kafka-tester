@@ -1,4 +1,5 @@
 import socket
+import ssl
 
 import pytest
 
@@ -18,7 +19,9 @@ def fake_https(status=200, body=b"203.0.113.7\n"):
     requests = []
 
     class Connection:
-        def __init__(self, host, port, timeout):
+        def __init__(self, host, port, timeout, context):
+            assert context.verify_mode == ssl.CERT_REQUIRED
+            assert context.check_hostname is True
             requests.append({"host": host, "port": port, "timeout": timeout})
 
         def request(self, method, path):
@@ -58,7 +61,7 @@ def test_outbound_ip_keeps_the_path_and_query(monkeypatch):
 
 def test_outbound_ip_refuses_plain_http():
     with pytest.raises(ValueError, match="https"):
-        network.outbound_ip("http://echo.example.com")
+        network.outbound_ip("http://echo.example.com")  # DevSkim: ignore DS137138
 
 
 def test_outbound_ip_on_an_error_status(monkeypatch):
